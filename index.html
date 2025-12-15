@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muscovado Tech | 穩定的技術，值得信賴的守護</title>
+    
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <!-- Note: Avoid using Tailwind CDN in production. Install it locally as a PostCSS plugin or use Tailwind CLI. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bg: {
+                            main: '#222630',    // 主背景深藍
+                            card: '#2A3644',    // 次要背景/卡片
+                            darker: '#1a1d24',
+                        },
+                        text: {
+                            main: '#FFFFFF',    // 主文字白
+                            sub: '#94A9C1',     // 次要文字/強調色
+                            muted: '#5C6470',   // 深灰文字
+                        },
+                        accent: {
+                            DEFAULT: '#94A9C1', // 中間層次藍 (強調色)
+                            light: '#C8D6E5',   // 淺層次藍
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans TC', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #222630;
+            color: #FFFFFF;
+            font-family: 'Noto Sans TC', sans-serif;
+            overflow-x: hidden;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #FFFFFF, #94A9C1);
+            background-clip: text; /* Added for compatibility */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #222630; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2A3644; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94A9C1; 
+        }
+        /* Animation Utilities */
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 0.8s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <nav-bar></nav-bar>
+        <hero-section></hero-section>
+        <brand-story></brand-story>
+        <features-section></features-section>
+        <page-footer></page-footer>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
+
+        // --- Shared Components ---
+
+        // Custom Logo Component
+        const BrandLogo = {
+            props: ['customClass'], // Renamed 'class' to 'customClass'
+            template: `
+                <svg viewBox="0 0 100 100" :class="customClass" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 90V30L50 60L90 30V90" stroke="#94A9C1" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M50 60L65 45C65 45 70 35 75 35C80 35 85 40 85 45L75 55V90" fill="#C8D6E5" opacity="0.8"/>
+                    <circle cx="78" cy="42" r="2" fill="#222630"/>
+                </svg>
+            `
+        };
+
+        // --- Main Sections ---
+
+        const NavBar = {
+            components: { BrandLogo },
+            setup() {
+                const isScrolled = ref(false);
+                const isMobileMenuOpen = ref(false);
+                const navLinks = [
+                    { name: '關於我們', href: '#about' },
+                    { name: '核心價值', href: '#values' },
+                    { name: '服務精神', href: '#service' },
+                    { name: '聯絡我們', href: '#contact' },
+                ];
+
+                const handleScroll = () => {
+                    isScrolled.value = window.scrollY > 50;
+                };
+
+                const toggleMenu = async () => {
+                    isMobileMenuOpen.value = !isMobileMenuOpen.value;
+                    await nextTick();
+                    lucide.createIcons();
+                };
+
+                onMounted(() => {
+                    window.addEventListener('scroll', handleScroll);
+                    lucide.createIcons();
+                });
+
+                onUnmounted(() => {
+                    window.removeEventListener('scroll', handleScroll);
+                });
+
+                return { isScrolled, isMobileMenuOpen, navLinks, toggleMenu };
+            },
+            template: `
+                <nav :class="['fixed w-full z-50 transition-all duration-300', isScrolled ? 'bg-bg-main/95 backdrop-blur-md shadow-lg py-4' : 'bg-transparent py-6']">
+                    <div class="container mx-auto px-6 flex justify-between items-center">
+                        <a href="#" class="flex items-center gap-3 group">
+                            <brand-logo class="w-10 h-10 group-hover:scale-105 transition-transform duration-300"></brand-logo>
+                            <div class="flex flex-col">
+                                <span class="text-xl font-bold tracking-wide text-text-main">Muscovado Tech</span>
+                                <span class="text-xs text-text-sub tracking-widest">RELIABLE SYSTEMS</span>
+                            </div>
+                        </a>
+
+                        <!-- Desktop Menu -->
+                        <div class="hidden md:flex items-center gap-8">
+                            <a v-for="link in navLinks" :key="link.name" :href="link.href" class="text-sm font-medium text-gray-300 hover:text-accent transition-colors">
+                                {{ link.name }}
+                            </a>
+                            <a href="#contact" class="px-5 py-2 rounded-full border border-accent text-accent hover:bg-accent hover:text-bg-main transition-all duration-300 text-sm font-bold">
+                                專案諮詢
+                            </a>
+                        </div>
+
+                        <!-- Mobile Toggle -->
+                        <button class="md:hidden text-text-main" @click="toggleMenu">
+                            <i :data-lucide="isMobileMenuOpen ? 'x' : 'menu'" width="24" height="24"></i>
+                        </button>
+                    </div>
+
+                    <!-- Mobile Menu -->
+                    <div v-if="isMobileMenuOpen" class="md:hidden absolute top-full left-0 w-full bg-bg-card border-t border-gray-800 p-6 flex flex-col gap-4 shadow-xl">
+                        <a v-for="link in navLinks" :key="link.name" :href="link.href" @click="toggleMenu" class="text-gray-300 hover:text-accent py-2 block">
+                            {{ link.name }}
+                        </a>
+                    </div>
+                </nav>
+            `
+        };
+
+        const HeroSection = {
+            components: { BrandLogo },
+            setup() {
+                onMounted(() => lucide.createIcons());
+            },
+            template: `
+                <section class="relative min-h-screen flex items-center pt-20 overflow-hidden">
+                    <div class="absolute top-0 right-0 w-1/2 h-full bg-bg-card/20 skew-x-12 translate-x-1/4 -z-10"></div>
+                    <div class="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl -z-10"></div>
+
+                    <div class="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+                        <div class="space-y-8 animate-fade-in-up">
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bg-card border border-gray-700 text-text-sub text-xs font-medium tracking-wider">
+                                <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+                                Reliable Systems. Trusted Partnership.
+                            </div>
+                            
+                            <h1 class="text-4xl md:text-6xl font-bold leading-tight">
+                                穩定的技術，<br/>
+                                <span class="gradient-text">值得信賴的守護</span>
+                            </h1>
+                            
+                            <p class="text-gray-400 text-lg md:text-xl max-w-lg leading-relaxed">
+                                我們不追求炫技，而是讓技術真正解決問題。<br/>
+                                好的系統，就像一個可靠的夥伴，默默把事情做好。
+                            </p>
+                            
+                            <div class="flex flex-wrap gap-4 pt-4">
+                                <a href="#contact" class="px-8 py-3 bg-accent text-bg-main rounded-lg font-bold hover:bg-white transition-colors duration-300 flex items-center gap-2">
+                                    開始合作 <i data-lucide="chevron-right" width="18" height="18"></i>
+                                </a>
+                                <a href="#about" class="px-8 py-3 border border-gray-600 rounded-lg text-gray-300 hover:border-accent hover:text-accent transition-colors duration-300">
+                                    了解更多
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="relative hidden md:flex justify-center items-center">
+                            <div class="relative w-80 h-80">
+                                <div class="absolute inset-0 border-2 border-accent/20 rounded-full animate-[spin_10s_linear_infinite]"></div>
+                                <div class="absolute inset-4 border border-accent/40 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <brand-logo class="w-48 h-48 drop-shadow-[0_0_15px_rgba(148,169,193,0.3)]"></brand-logo>
+                                </div>
+                                <div class="absolute -right-8 top-10 bg-bg-card p-4 rounded-xl shadow-xl border border-gray-700 animate-bounce" style="animation-duration: 3s">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-green-500/10 rounded-lg text-green-400">
+                                            <i data-lucide="check-circle" width="20" height="20"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs text-gray-400">System Status</div>
+                                            <div class="font-bold text-sm">Stable & Secure</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `
+        };
+
+        const BrandStory = {
+            components: { BrandLogo },
+            setup() {
+                onMounted(() => lucide.createIcons());
+            },
+            template: `
+                <section id="about" class="py-24 bg-bg-card relative overflow-hidden">
+                    <div class="absolute -left-20 top-20 w-64 h-64 bg-accent/5 rounded-full blur-3xl"></div>
+                    
+                    <div class="container mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+                        <div class="order-2 md:order-1 relative">
+                            <div class="bg-gradient-to-tr from-bg-main to-bg-card p-1 rounded-2xl rotate-3">
+                                <div class="bg-bg-main rounded-xl p-8 md:p-12 relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                                        <brand-logo class="w-48 h-48"></brand-logo>
+                                    </div>
+                                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                                        <i data-lucide="shield" class="text-accent"></i> 
+                                        守護者的承諾
+                                    </h3>
+                                    <p class="text-gray-300 mb-6 leading-relaxed">
+                                        我們的 Logo 靈感來自於卡爾比犬（Kelpie）。這不僅是一個圖案，更是我們服務精神的象徵。
+                                    </p>
+                                    <ul class="space-y-4">
+                                        <li class="flex items-start gap-3">
+                                            <div class="mt-1 w-2 h-2 rounded-full bg-accent flex-shrink-0"></div>
+                                            <div>
+                                                <strong class="text-white block mb-1">守護 (Security)</strong>
+                                                <span class="text-sm text-gray-400">如同牧羊犬守護羊群，我們守護您的系統穩定與資料安全。</span>
+                                            </div>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <div class="mt-1 w-2 h-2 rounded-full bg-accent flex-shrink-0"></div>
+                                            <div>
+                                                <strong class="text-white block mb-1">忠誠 (Loyalty)</strong>
+                                                <span class="text-sm text-gray-400">不求短期獲利，我們尋求長期的合作夥伴關係，始終在您身後。</span>
+                                            </div>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <div class="mt-1 w-2 h-2 rounded-full bg-accent flex-shrink-0"></div>
+                                            <div>
+                                                <strong class="text-white block mb-1">專注 (Focus)</strong>
+                                                <span class="text-sm text-gray-400">專注於把事情做好，用最專業的態度解決每一個技術難題。</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="order-1 md:order-2 space-y-6">
+                            <div class="text-accent font-bold tracking-widest text-sm uppercase">About Us</div>
+                            <h2 class="text-3xl md:text-5xl font-bold leading-tight">
+                                用專業軟體服務，<br/>
+                                <span class="text-accent">降低</span>複雜度與不確定性
+                            </h2>
+                            <p class="text-gray-400 text-lg">
+                                我們的使命很簡單：讓客戶少煩惱技術問題，專心在真正重要的事上。
+                            </p>
+                            <p className="text-gray-400 text-lg">
+                                我們希望成為您長期合作、值得信賴的軟體夥伴。不是一次性專案的結束，而是長期維護、持續優化的開始。
+                            </p>
+                            
+                            <div class="pt-6 border-t border-gray-700">
+                                <div class="flex items-center gap-4">
+                                    <div class="p-3 bg-bg-main rounded-full text-accent">
+                                        <i data-lucide="coffee" width="24" height="24"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold">像工程師夥伴一樣思考</h4>
+                                        <p class="text-sm text-gray-500">主動發現問題，提出可行方案，陪伴成長。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `
+        };
+
+        const FeaturesSection = {
+            setup() {
+                const values = [
+                    { icon: 'layout', title: "專業與穩定", desc: "重視架構、品質與可維護性。我們的軟體服務可靠、不草率，確保系統長期穩定運行。" },
+                    { icon: 'users', title: "以使用者為中心", desc: "不只寫程式，更懂使用者。從實際情境出發，注重體驗、效率，降低使用者的理解成本。" },
+                    { icon: 'terminal', title: "誠實負責", desc: "對產品與承諾負責。我們不過度包裝、不空談，確保每一行代碼都對得起客戶的信任。" },
+                    { icon: 'heart', title: "溫度與信任", desc: "軟體背後是人。我們保持親切、可溝通、願意傾聽，做您最溫暖的技術後盾。" }
+                ];
+
+                onMounted(() => lucide.createIcons());
+                
+                return { values };
+            },
+            template: `
+                <section id="values" class="py-24 bg-bg-main relative">
+                    <div class="container mx-auto px-6">
+                        <div class="text-center max-w-2xl mx-auto mb-16">
+                            <h2 class="text-3xl md:text-4xl font-bold mb-4">核心價值</h2>
+                            <div class="w-16 h-1 bg-accent mx-auto mb-6"></div>
+                            <p class="text-gray-400">
+                                專業是基礎，信任是關係，溫度是差異。<br/>我們相信技術應該讓人安心，而不是造成壓力。
+                            </p>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                            <div v-for="(val, idx) in values" :key="idx" class="bg-bg-card p-8 rounded-2xl hover:-translate-y-2 transition-transform duration-300 border border-transparent hover:border-accent/30 group">
+                                <div class="bg-bg-main w-16 h-16 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                    <i :data-lucide="val.icon" class="w-8 h-8 text-accent"></i>
+                                </div>
+                                <h3 class="text-xl font-bold mb-3 text-white group-hover:text-accent transition-colors">{{ val.title }}</h3>
+                                <p class="text-gray-400 text-sm leading-relaxed text-justify">
+                                    {{ val.desc }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `
+        };
+
+        const PageFooter = {
+            components: { BrandLogo },
+            setup() {
+                onMounted(() => lucide.createIcons());
+            },
+            template: `
+                <footer id="contact" class="bg-bg-darker pt-20 pb-10 border-t border-gray-800">
+                    <div class="container mx-auto px-6">
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+                            <div class="col-span-1 lg:col-span-2 space-y-6">
+                                <div class="flex items-center gap-2">
+                                    <brand-logo class="w-8 h-8"></brand-logo>
+                                    <span class="text-2xl font-bold text-white">Muscovado Tech</span>
+                                </div>
+                                <p class="text-gray-400 max-w-sm leading-relaxed">
+                                    穩定的技術，值得信賴的守護。<br/>
+                                    讓我們成為您最堅強的軟體後盾。
+                                </p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-white font-bold mb-6">服務項目</h4>
+                                <ul class="space-y-3 text-gray-400 text-sm">
+                                    <li class="hover:text-accent cursor-pointer transition-colors">客製化軟體開發</li>
+                                    <li class="hover:text-accent cursor-pointer transition-colors">系統架構規劃</li>
+                                    <li class="hover:text-accent cursor-pointer transition-colors">長期維護與優化</li>
+                                    <li class="hover:text-accent cursor-pointer transition-colors">技術顧問諮詢</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-white font-bold mb-6">聯絡我們</h4>
+                                <div class="space-y-4">
+                                    <p class="text-gray-400 text-sm">
+                                        準備好開始您的專案了嗎？<br/>
+                                        歡迎與我們聊聊。
+                                    </p>
+                                    <button class="px-6 py-2 bg-accent/10 text-accent border border-accent/50 rounded hover:bg-accent hover:text-bg-main transition-all duration-300 w-full md:w-auto">
+                                        聯絡表單
+                                    </button>
+                                    <div class="text-xs text-gray-500 mt-4">
+                                        Email: contact@muscovado.tech<br/>
+                                        (範例信箱)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-600">
+                            <p>&copy; 2024 Muscovado Tech. All rights reserved.</p>
+                            <div class="flex gap-6 mt-4 md:mt-0">
+                                <a href="#" class="hover:text-gray-400">Privacy Policy</a>
+                                <a href="#" class="hover:text-gray-400">Terms of Service</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            `
+        };
+
+        const App = {
+            components: {
+                NavBar,
+                HeroSection,
+                BrandStory,
+                FeaturesSection,
+                PageFooter
+            },
+            setup() {
+                // Ensure icons are created after any global update
+                // But mostly handled inside components
+            }
+        };
+
+        createApp(App).mount('#app');
+    </script>
+</body>
+</html>
